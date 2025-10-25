@@ -36,7 +36,7 @@ export default function TaskPage() {
     }
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/tasks", {
+      const response = await fetch("https://tazk-kf9q.onrender.com/tasks", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ title: trimmedTask, user: user.email }),
@@ -57,7 +57,7 @@ export default function TaskPage() {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/tasks?user=${user.email}`
+        `https://tazk-kf9q.onrender.com/tasks?user=${user.email}`
       );
       const data = await response.json();
       setTasks(data);
@@ -71,7 +71,7 @@ export default function TaskPage() {
 
   const toggleComplete = async (id, currentStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${id}`, {
+      const response = await fetch(`https://tazk-kf9q.onrender.com/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: !currentStatus }),
@@ -87,7 +87,7 @@ export default function TaskPage() {
 
   const deleteTask = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${id}`, {
+      const response = await fetch(`https://tazk-kf9q.onrender.com/tasks/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete task");
