@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom"
 import useTaskStore from "../store/taskStore";
 import useAuthStore from "../store/authStore";
 import {
@@ -14,7 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, LogOut, Trash2 } from "lucide-react";
 
 export default function TaskPage() {
-  const { user, logout } = useAuthStore();
+  const { token, logout } = useAuthStore();
+  const navigate = useNavigate()
   const {
     tasks,
     task,
@@ -58,7 +60,12 @@ export default function TaskPage() {
       setLoading(true);
       const response = await fetch(
         `https://tazk-kf9q.onrender.com/tasks?user=${user.email}`
-      );
+      , {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
       const data = await response.json();
       setTasks(data);
     } catch (err) {
@@ -102,6 +109,10 @@ export default function TaskPage() {
     fetchTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+  if (!token) navigate("/");
+}, [token]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">

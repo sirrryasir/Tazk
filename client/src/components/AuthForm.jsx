@@ -47,28 +47,55 @@ export function AuthForm() {
     }
   };
 
-  const handleLogin = async () => {
-    setError("");
-    if (!email || !password) return setError("Please fill all fields");
+  const handleSignup = async () => {
+  setError("");
+  if (!signupName || !email || !password)
+    return setError("Please fill all fields");
 
-    try {
-      setError("");
-      const res = await fetch("https://tazk-kf9q.onrender.com/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Login failed");
-      }
-      const data = await res.json();
-      login(data);
-      navigate("/tasks");
-    } catch (err) {
-      setError(err.message);
+  try {
+    const res = await fetch("https://tazk-kf9q.onrender.com/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: signupName, email, password }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Signup failed");
     }
-  };
+
+    // login response now returns token
+    const data = await res.json();
+    login(data); // token stored here
+    navigate("/tasks");
+  } catch (err) {
+    setError(err.message);
+  }
+};
+
+const handleLogin = async () => {
+  setError("");
+  if (!email || !password) return setError("Please fill all fields");
+
+  try {
+    const res = await fetch("https://tazk-kf9q.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Login failed");
+    }
+
+    const data = await res.json();
+    login(data); // store token in Zustand
+    navigate("/tasks");
+  } catch (err) {
+    setError(err.message);
+  }
+};
 
   const handleAuth = () => {
     if (tab === "login") {

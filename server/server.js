@@ -3,10 +3,11 @@ const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken"); // ✅ JWT library
 require("dotenv").config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -15,6 +16,19 @@ app.use(express.json());
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
+
+// Middleware to verify JWT
+function verifyToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.status(403).json({ message: "No token provided" });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: "Invalid or expired token" });
+    req.user = user;
+    next();
+  });
+}
 
 // ---------- USERS ----------
 
@@ -42,7 +56,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login
+// Login (returns JWT)
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -56,18 +70,14 @@ app.post("/login", async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
-    res.status(200).json({ id: user.id, name: user.name, email: user.email });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+    // ✅ Create JWT
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" } // expires after 1 hour
+    );
 
-// Get all users
-app.get("/users", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT id, name, email FROM users");
-    res.json(result.rows);
+    res.status(200).json({ token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
@@ -76,13 +86,11 @@ app.get("/users", async (req, res) => {
 
 // ---------- TASKS ----------
 
-// Get tasks (optionally filter by user email)
-app.get("/tasks", async (req, res) => {
-  const userEmail = req.query.user;
+// Get tasks (Protected)
+app.get("/tasks", verifyToken, async (req, res) => {
+  const userEmail = req.user.email;
   try {
-    const result = userEmail
-      ? await pool.query("SELECT * FROM tasks WHERE user_email=$1", [userEmail])
-      : await pool.query("SELECT * FROM tasks");
+    const result = await pool.query("SELECT * FROM tasks WHERE user_email=$1", [userEmail]);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -90,16 +98,16 @@ app.get("/tasks", async (req, res) => {
   }
 });
 
-// Add new task
-app.post("/tasks", async (req, res) => {
-  const { title, user_email } = req.body;
-  if (!title || !user_email)
-    return res.status(400).json({ message: "Title and user_email are required" });
+// Add new task (Protected)
+app.post("/tasks", verifyToken, async (req, res) => {
+  const { title } = req.body;
+  const userEmail = req.user.email;
+  if (!title) return res.status(400).json({ message: "Title is required" });
 
   try {
     const result = await pool.query(
       "INSERT INTO tasks (title, completed, user_email) VALUES ($1, false, $2) RETURNING *",
-      [title, user_email]
+      [title, userEmail]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -108,8 +116,8 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-// Toggle task completion
-app.patch("/tasks/:id", async (req, res) => {
+// Toggle task completion (Protected)
+app.patch("/tasks/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { completed } = req.body;
 
@@ -127,8 +135,8 @@ app.patch("/tasks/:id", async (req, res) => {
   }
 });
 
-// Delete task
-app.delete("/tasks/:id", async (req, res) => {
+// Delete task (Protected)
+app.delete("/tasks/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -142,5 +150,10 @@ app.delete("/tasks/:id", async (req, res) => {
   }
 });
 
+// ---------- DEFAULT ----------
+app.get("/", (req, res) => {
+  res.send("✅ API is running securely with JWT Authentication!");
+});
+
 // Start server
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
