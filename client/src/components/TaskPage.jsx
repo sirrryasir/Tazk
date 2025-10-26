@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 import useTaskStore from "../store/taskStore";
 import useAuthStore from "../store/authStore";
 import {
@@ -15,8 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, LogOut, Trash2 } from "lucide-react";
 
 export default function TaskPage() {
-  const { token, logout } = useAuthStore();
-  const navigate = useNavigate()
+  const { token, user, logout } = useAuthStore();
+  const navigate = useNavigate();
   const {
     tasks,
     task,
@@ -38,7 +38,7 @@ export default function TaskPage() {
     }
     try {
       setLoading(true);
-      const response = await fetch("https://tazk-kf9q.onrender.com/tasks", {
+      const response = await fetch("http://localhost:5000/tasks", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ title: trimmedTask, user: user.email }),
@@ -59,13 +59,14 @@ export default function TaskPage() {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://tazk-kf9q.onrender.com/tasks?user=${user.email}`
-      , {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+        `http://localhost:5000/tasks?user=${user.email}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const data = await response.json();
       setTasks(data);
     } catch (err) {
@@ -78,11 +79,14 @@ export default function TaskPage() {
 
   const toggleComplete = async (id, currentStatus) => {
     try {
-      const response = await fetch(`https://tazk-kf9q.onrender.com/tasks/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed: !currentStatus }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/tasks/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ completed: !currentStatus }),
+        }
+      );
       if (!response.ok) throw new Error("Failed to update task");
 
       const updated = await response.json();
@@ -94,9 +98,12 @@ export default function TaskPage() {
 
   const deleteTask = async (id) => {
     try {
-      const response = await fetch(`https://tazk-kf9q.onrender.com/tasks/${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `http://localhost:5000/tasks/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!response.ok) throw new Error("Failed to delete task");
 
       setTasks(tasks.filter((t) => t._id !== id));
@@ -111,8 +118,8 @@ export default function TaskPage() {
   }, []);
 
   useEffect(() => {
-  if (!token) navigate("/");
-}, [token]);
+    if (!token) navigate("/");
+  }, [navigate, token]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
