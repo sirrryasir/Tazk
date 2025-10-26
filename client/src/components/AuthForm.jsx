@@ -13,72 +13,73 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export function AuthForm() {
-  const { login } = useAuthStore();
+  const { login, authLoading, setAuthLoading, error, setError } =
+    useAuthStore();
   const navigate = useNavigate();
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signupName, setSignupName] = useState("");
-  const [error, setError] = useState("");
 
+  // Signup
   const handleSignup = async () => {
     setError("");
     if (!signupName || !email || !password)
       return setError("Please fill all fields");
 
     try {
+      setAuthLoading(true);
       const res = await fetch("https://tazk-kf9q.onrender.com/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: signupName, email, password }),
       });
-
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Signup failed");
       }
-
-      // login response now returns token
       const data = await res.json();
-      login(data); // token stored here
+      login(data);
       navigate("/tasks");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setAuthLoading(false);
     }
   };
 
+  // Login
   const handleLogin = async () => {
     setError("");
     if (!email || !password) return setError("Please fill all fields");
 
     try {
+      setAuthLoading(true);
       const res = await fetch("https://tazk-kf9q.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Login failed");
       }
-
       const data = await res.json();
-      login(data); // store token in Zustand
+      login(data);
       navigate("/tasks");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setAuthLoading(false);
     }
   };
 
   const handleAuth = () => {
-    if (tab === "login") {
-      handleLogin();
-    } else {
-      handleSignup();
-    }
+    if (tab === "login") handleLogin();
+    else handleSignup();
   };
 
   return (
@@ -102,6 +103,7 @@ export function AuthForm() {
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
 
+            {/* LOGIN */}
             <TabsContent value="login">
               <div className="space-y-2">
                 <Label htmlFor="login-email">Email</Label>
@@ -126,6 +128,7 @@ export function AuthForm() {
               </div>
             </TabsContent>
 
+            {/* SIGNUP */}
             <TabsContent value="signup">
               <div className="space-y-2">
                 <Label htmlFor="signup-name">Name</Label>
@@ -164,13 +167,25 @@ export function AuthForm() {
 
         <CardFooter className="flex flex-col space-y-2">
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <Button onClick={handleAuth} className="w-full">
-            {tab === "login" ? "Login" : "Create Account"}
+
+          <Button
+            onClick={handleAuth}
+            disabled={authLoading}
+            className="w-full"
+          >
+            {authLoading ? (
+              <Loader2 className="animate-spin h-4 w-4" />
+            ) : tab === "login" ? (
+              "Login"
+            ) : (
+              "Create Account"
+            )}
           </Button>
+
           <p className="text-center text-sm text-gray-500">
             {tab === "login" ? (
               <>
-                Don’t have an account?{" "}
+                Don’t have an account?
                 <button
                   onClick={() => setTab("signup")}
                   className="text-blue-600 hover:underline"
@@ -180,7 +195,7 @@ export function AuthForm() {
               </>
             ) : (
               <>
-                Already have an account?{" "}
+                Already have an account?
                 <button
                   onClick={() => setTab("login")}
                   className="text-blue-600 hover:underline"

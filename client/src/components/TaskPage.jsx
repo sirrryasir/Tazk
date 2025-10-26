@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useTaskStore from "../store/taskStore";
 import useAuthStore from "../store/authStore";
@@ -17,17 +17,9 @@ import { Loader2, LogOut, Trash2 } from "lucide-react";
 export default function TaskPage() {
   const { token, user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const {
-    tasks,
-    task,
-    loading,
-    error,
-    setTask,
-    setError,
-    setLoading,
-    setTasks,
-    addTask,
-  } = useTaskStore();
+  const { tasks, loading, error, setError, setLoading, setTasks, addTask } =
+    useTaskStore();
+  const [task, setTask] = useState("");
 
   const AddTask = async () => {
     setError(null);
@@ -40,7 +32,10 @@ export default function TaskPage() {
       setLoading(true);
       const response = await fetch("https://tazk-kf9q.onrender.com/tasks", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ title: trimmedTask, user: user.email }),
       });
       if (!response.ok) throw new Error("Failed to add task");
@@ -83,14 +78,17 @@ export default function TaskPage() {
         `https://tazk-kf9q.onrender.com/tasks/${id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ completed: !currentStatus }),
         }
       );
       if (!response.ok) throw new Error("Failed to update task");
 
       const updated = await response.json();
-      setTasks(tasks.map((t) => (t._id === id ? updated : t)));
+      setTasks(tasks.map((t) => (t.id === id ? updated : t)));
     } catch (err) {
       console.error("Error updating task:", err);
     }
@@ -102,11 +100,14 @@ export default function TaskPage() {
         `https://tazk-kf9q.onrender.com/tasks/${id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       if (!response.ok) throw new Error("Failed to delete task");
 
-      setTasks(tasks.filter((t) => t._id !== id));
+      setTasks(tasks.filter((t) => t.id !== id));
     } catch (err) {
       console.error("Error deleting task:", err);
     }
@@ -168,13 +169,13 @@ export default function TaskPage() {
             ) : (
               tasks.map((t) => (
                 <div
-                  key={t._id}
+                  key={t.id}
                   className="flex items-center justify-between p-2 rounded hover:bg-gray-100"
                 >
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       checked={t.completed}
-                      onCheckedChange={() => toggleComplete(t._id, t.completed)}
+                      onCheckedChange={() => toggleComplete(t.id, t.completed)}
                     />
                     <span
                       className={`text-base ${
@@ -189,7 +190,7 @@ export default function TaskPage() {
                   <Button
                     variant="destructive"
                     size="icon"
-                    onClick={() => deleteTask(t._id)}
+                    onClick={() => deleteTask(t.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
