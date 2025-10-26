@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken"); // ✅ JWT library
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const app = express();
@@ -75,7 +75,7 @@ app.post("/login", async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
-    // ✅ Create JWT
+    // Create JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -169,7 +169,7 @@ app.delete("/tasks/:id", verifyToken, async (req, res) => {
 
 // ---------- DEFAULT ----------
 app.get("/", (req, res) => {
-  res.send("✅ API is running securely with JWT Authentication!");
+  res.send("API is running securely with JWT Authentication!");
 });
 
 // Start server
