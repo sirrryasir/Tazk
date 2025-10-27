@@ -1,7 +1,6 @@
 import { create } from "zustand";
 
 const useAuthStore = create((set) => ({
-  token: localStorage.getItem("token") || null,
   user: JSON.parse(localStorage.getItem("user")) || null,
   authLoading: false,
   error: null,
@@ -10,15 +9,17 @@ const useAuthStore = create((set) => ({
   setError: (e) => set({ error: e }),
 
   login: (data) => {
-    localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
-    set({ token: data.token, user: data.user });
+    set({ user: data.user });
   },
 
-  logout: () => {
-    localStorage.removeItem("token");
+  logout: async () => {
+    await fetch("https://tazk-kf9q.onrender.com/logout", {
+      method: "POST",
+      credentials: "include",
+    });
     localStorage.removeItem("user");
-    set({ token: null, user: null });
+    set({ user: null });
   },
 }));
 

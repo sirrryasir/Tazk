@@ -36,6 +36,7 @@ export function AuthForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: signupName, email, password }),
+        credentials: "include",
       });
       if (!res.ok) {
         const errorData = await res.json();
@@ -43,6 +44,7 @@ export function AuthForm() {
       }
       const data = await res.json();
       login(data);
+      await handleLogin();
       navigate("/tasks");
     } catch (err) {
       setError(err.message);
@@ -62,6 +64,7 @@ export function AuthForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
       if (!res.ok) {
         const errorData = await res.json();

@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, LogOut, Trash2 } from "lucide-react";
 
 export default function TaskPage() {
-  const { token, user, logout } = useAuthStore();
+  const { user, login, logout } = useAuthStore();
   const navigate = useNavigate();
   const { tasks, loading, error, setError, setLoading, setTasks, addTask } =
     useTaskStore();
@@ -34,9 +34,9 @@ export default function TaskPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ title: trimmedTask, user: user.email }),
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to add task");
       const data = await response.json();
@@ -58,8 +58,8 @@ export default function TaskPage() {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
         }
       );
       const data = await response.json();
@@ -80,9 +80,9 @@ export default function TaskPage() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ completed: !currentStatus }),
+          credentials: "include",
         }
       );
       if (!response.ok) throw new Error("Failed to update task");
@@ -100,9 +100,7 @@ export default function TaskPage() {
         `https://tazk-kf9q.onrender.com/tasks/${id}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
         }
       );
       if (!response.ok) throw new Error("Failed to delete task");
@@ -119,8 +117,24 @@ export default function TaskPage() {
   }, []);
 
   useEffect(() => {
-    if (!token) navigate("/");
-  }, [navigate, token]);
+    if (!user) navigate("/auth");
+  }, [navigate, user]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const res = await fetch("https://tazk-kf9q.onrender.com/me", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        login({ user: data });
+      } else {
+        logout();
+      }
+    };
+    if (!user) checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">

@@ -4,13 +4,20 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://tazk-omega.vercel.app",
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 // PostgreSQL connection
 const pool = new Pool({
@@ -19,8 +26,7 @@ const pool = new Pool({
 
 // Middleware to verify JWT
 function verifyToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const token = req.cookies.token;
   if (!token) return res.status(403).json({ message: "No token provided" });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -59,7 +65,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login (returns JWT)
+// Login
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -75,23 +81,32 @@ app.post("/login", async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
-    // Create JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" } // expires after 1 hour
+      { expiresIn: "1h" }
     );
 
-    res
-      .status(200)
-      .json({
-        token,
-        user: { id: user.id, name: user.name, email: user.email },
-      });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      maxAge: 3600000,
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      user: { id: user.id, name: user.name, email: user.email },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out successfully" });
 });
 
 // ---------- TASKS ----------
@@ -161,6 +176,19 @@ app.delete("/tasks/:id", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
 
     res.json({ message: "Task deleted", deleted: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/me", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, name, email FROM users WHERE email=$1",
+      [req.user.email]
+    );
+    res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
