@@ -32,8 +32,10 @@ export default function TaskPage() {
       setLoading(true);
       const response = await fetch("https://tazky.onrender.com/tasks", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: trimmedTask }),
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ title: trimmedTask, user: user.email }),
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to add task");
