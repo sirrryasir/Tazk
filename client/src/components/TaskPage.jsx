@@ -30,7 +30,7 @@ export default function TaskPage() {
     }
     try {
       setLoading(true);
-      const response = await fetch("https://tazk-kf9q.onrender.com/tasks", {
+      const response = await fetch("https://tazky.onrender.com/tasks", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -54,7 +54,7 @@ export default function TaskPage() {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://tazk-kf9q.onrender.com/tasks?user=${user.email}`,
+        `https://tazky.onrender.com/tasks?user=${user.email}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -75,7 +75,7 @@ export default function TaskPage() {
   const toggleComplete = async (id, currentStatus) => {
     try {
       const response = await fetch(
-        `https://tazk-kf9q.onrender.com/tasks/${id}`,
+        `https://tazky.onrender.com/tasks/${id}`,
         {
           method: "PATCH",
           headers: {
@@ -97,7 +97,7 @@ export default function TaskPage() {
   const deleteTask = async (id) => {
     try {
       const response = await fetch(
-        `https://tazk-kf9q.onrender.com/tasks/${id}`,
+        `https://tazky.onrender.com/tasks/${id}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -122,7 +122,7 @@ export default function TaskPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const res = await fetch("https://tazk-kf9q.onrender.com/me", {
+      const res = await fetch("https://tazky.onrender.com/me", {
         credentials: "include",
       });
       if (res.ok) {
