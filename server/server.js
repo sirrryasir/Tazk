@@ -12,7 +12,7 @@ const PORT = process.env.PORT;
 
 app.use(
   cors({
-    origin: "https://tazk-omega.vercel.app",
+    origin: "https://tazky.vercel.app",
     credentials: true,
   })
 );
