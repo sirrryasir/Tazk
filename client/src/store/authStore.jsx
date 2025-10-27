@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 const useAuthStore = create((set) => ({
   user: null,
-  authLoading: true,
+  authLoading: false,
   error: null,
 
   setAuthLoading: (l) => set({ authLoading: l }),
