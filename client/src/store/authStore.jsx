@@ -1,24 +1,23 @@
 import { create } from "zustand";
 
 const useAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem("user")) || null,
-  authLoading: false,
+  user: null,
+  authLoading: true,
   error: null,
 
   setAuthLoading: (l) => set({ authLoading: l }),
   setError: (e) => set({ error: e }),
 
-  login: (data) => {
-    localStorage.setItem("user", JSON.stringify(data.user));
-    set({ user: data.user });
-  },
-
+  login: (data) => set({ user: data.user }),
   logout: async () => {
-    await fetch("https://https://tazky.onrender.com/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-    localStorage.removeItem("user");
+    try {
+      await fetch("https://tazky.onrender.com/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
     set({ user: null });
   },
 }));
