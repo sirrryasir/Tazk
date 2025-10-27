@@ -63,7 +63,7 @@ export default function TaskPage() {
         }
       );
       const data = await response.json();
-      setTasks(data);
+      setTasks(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching tasks:", err);
       setError("Failed to load tasks.");
@@ -74,17 +74,14 @@ export default function TaskPage() {
 
   const toggleComplete = async (id, currentStatus) => {
     try {
-      const response = await fetch(
-        `https://tazky.onrender.com/tasks/${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ completed: !currentStatus }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ completed: !currentStatus }),
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to update task");
 
       const updated = await response.json();
@@ -96,13 +93,10 @@ export default function TaskPage() {
 
   const deleteTask = async (id) => {
     try {
-      const response = await fetch(
-        `https://tazky.onrender.com/tasks/${id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to delete task");
 
       setTasks(tasks.filter((t) => t.id !== id));
