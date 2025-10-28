@@ -15,7 +15,7 @@ const useAuthStore = create((set) => ({
 
   logout: async () => {
     try {
-      await fetch("api/logout", {
+      await fetch("/api/logout", {
         method: "POST",
         credentials: "include",
       });
