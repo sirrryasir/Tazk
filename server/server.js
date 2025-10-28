@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -8,23 +7,40 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
+// ✅ CORS setup (si browser kasta cookie u aqbalo)
 app.use(
   cors({
     origin: "https://tazky.vercel.app",
     credentials: true,
   })
 );
+
+// ✅ Headers extra ah si Chrome & Arc u aqbalaan cookies cross-origin
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Origin", "https://tazky.vercel.app");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PATCH, PUT, DELETE, OPTIONS"
+  );
+  next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 
-// PostgreSQL connection
+// ✅ PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// Middleware to verify JWT
+// ✅ Middleware to verify JWT
 function verifyToken(req, res, next) {
   const token = req.cookies.token;
   if (!token) return res.status(403).json({ message: "No token provided" });
@@ -87,11 +103,12 @@ app.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    // ✅ Cookie config sax ah
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      maxAge: 3600000,
+      secure: true, // HTTPS only
+      sameSite: "None", // si cross-origin u shaqeeyo
+      maxAge: 3600000, // 1 hour
     });
 
     res.status(200).json({
@@ -104,14 +121,19 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+  });
   res.json({ message: "Logged out successfully" });
 });
 
-// ---------- TASKS ----------
+// ---------- TASKS (Protected) ----------
 
-// Get tasks (Protected)
+// Get tasks
 app.get("/tasks", verifyToken, async (req, res) => {
   const userEmail = req.user.email;
   try {
@@ -125,7 +147,7 @@ app.get("/tasks", verifyToken, async (req, res) => {
   }
 });
 
-// Add new task (Protected)
+// Add new task
 app.post("/tasks", verifyToken, async (req, res) => {
   const { title } = req.body;
   const userEmail = req.user.email;
@@ -143,7 +165,7 @@ app.post("/tasks", verifyToken, async (req, res) => {
   }
 });
 
-// Toggle task completion (Protected)
+// Toggle task completion
 app.patch("/tasks/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { completed } = req.body;
@@ -163,7 +185,7 @@ app.patch("/tasks/:id", verifyToken, async (req, res) => {
   }
 });
 
-// Delete task (Protected)
+// Delete task
 app.delete("/tasks/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
@@ -182,6 +204,7 @@ app.delete("/tasks/:id", verifyToken, async (req, res) => {
   }
 });
 
+// ✅ Me route si loo hubiyo cookie
 app.get("/me", verifyToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -195,10 +218,15 @@ app.get("/me", verifyToken, async (req, res) => {
   }
 });
 
+// ✅ Optional test route si aad u hubiso cookie shaqeynayo
+app.get("/test-cookie", verifyToken, (req, res) => {
+  res.json({ ok: true, user: req.user });
+});
+
 // ---------- DEFAULT ----------
 app.get("/", (req, res) => {
   res.send("API is running securely with JWT Authentication!");
 });
 
 // Start server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
