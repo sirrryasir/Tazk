@@ -15,7 +15,7 @@ const useAuthStore = create((set) => ({
 
   logout: async () => {
     try {
-      await fetch("/api/logout", {
+      await fetch("https://tazky.onrender.com/logout", {
         method: "POST",
         credentials: "include",
       });

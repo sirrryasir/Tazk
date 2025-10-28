@@ -32,7 +32,7 @@ export function AuthForm() {
 
     try {
       setAuthLoading(true);
-      const res = await fetch("/api/signup", {
+      const res = await fetch("https://tazky.onrender.com/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: signupName, email, password }),
@@ -60,7 +60,7 @@ export function AuthForm() {
 
     try {
       setAuthLoading(true);
-      const res = await fetch("/api/login", {
+      const res = await fetch("https://tazky.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
