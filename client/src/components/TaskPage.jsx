@@ -30,7 +30,7 @@ export default function TaskPage() {
     }
     try {
       setLoading(true);
-      const response = await fetch("https://tazky.onrender.com/tasks", {
+      const response = await fetch("api/tasks", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -53,7 +53,7 @@ export default function TaskPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://tazky.onrender.com/tasks", {
+      const response = await fetch("api/tasks", {
         credentials: "include",
       });
 
@@ -71,7 +71,7 @@ export default function TaskPage() {
 
   const toggleComplete = async (id, currentStatus) => {
     try {
-      const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
+      const response = await fetch(`api/tasks/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export default function TaskPage() {
 
   const deleteTask = async (id) => {
     try {
-      const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
+      const response = await fetch(`api/tasks/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -113,7 +113,7 @@ export default function TaskPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const res = await fetch("https://tazky.onrender.com/me", {
+      const res = await fetch("api/me", {
         credentials: "include",
       });
       if (res.ok) {
