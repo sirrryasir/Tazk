@@ -22,6 +22,7 @@ const useAuthStore = create((set) => ({
     } catch (err) {
       console.error("Logout failed:", err);
     }
+    localStorage.removeItem("user");
     set({ user: null });
   },
 }));
