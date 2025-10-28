@@ -9,7 +9,6 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS setup (si browser kasta cookie u aqbalo)
 app.use(
   cors({
     origin: "https://tazky.vercel.app",
@@ -17,7 +16,6 @@ app.use(
   })
 );
 
-// ✅ Headers extra ah si Chrome & Arc u aqbalaan cookies cross-origin
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Origin", "https://tazky.vercel.app");
@@ -35,12 +33,10 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// ✅ Middleware to verify JWT
 function verifyToken(req, res, next) {
   const token = req.cookies.token;
   if (!token) return res.status(403).json({ message: "No token provided" });
@@ -103,12 +99,11 @@ app.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    // ✅ Cookie config sax ah
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true, // HTTPS only
-      sameSite: "None", // si cross-origin u shaqeeyo
-      maxAge: 3600000, // 1 hour
+      secure: true,
+      sameSite: "None",
+      maxAge: 3600000,
     });
 
     res.status(200).json({
@@ -204,7 +199,6 @@ app.delete("/tasks/:id", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Me route si loo hubiyo cookie
 app.get("/me", verifyToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -218,7 +212,6 @@ app.get("/me", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Optional test route si aad u hubiso cookie shaqeynayo
 app.get("/test-cookie", verifyToken, (req, res) => {
   res.json({ ok: true, user: req.user });
 });
@@ -229,4 +222,4 @@ app.get("/", (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
