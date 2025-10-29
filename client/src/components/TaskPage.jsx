@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, LogOut, Trash2 } from "lucide-react";
 
 export default function TaskPage() {
-  const { user, login, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const { tasks, loading, error, setError, setLoading, setTasks, addTask } =
     useTaskStore();
@@ -111,9 +111,11 @@ export default function TaskPage() {
   };
 
   useEffect(() => {
-    fetchTasks();
+    if (user) {
+      fetchTasks();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) navigate("/auth");
@@ -126,7 +128,7 @@ export default function TaskPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        login({ user: data });
+        useAuthStore.setState({ user: { user: data, token: user.token } });
       } else {
         logout();
       }
