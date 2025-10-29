@@ -1,12 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/:path((?!.*\\..*).*)",
-      "destination": "/index.html"
-    },
-    {
       "source": "/api/:path*",
       "destination": "https://tazky.onrender.com/:path*"
+    },
+    {
+      "source": "/:path((?!api).*)",
+      "destination": "/index.html"
     }
   ]
 }
