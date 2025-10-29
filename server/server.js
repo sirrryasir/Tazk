@@ -3,34 +3,33 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
+
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "https://tazky.vercel.app", credentials: true }));
+app.use(
+  cors({
+    origin: ["https://tazky.vercel.app", "https://*.vercel.app"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
-app.use(cookieParser());
+
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
 function verifyToken(req, res, next) {
-  let token = req.cookies.token;
-
-  if (!token && req.headers.authorization) {
-    const authHeader = req.headers.authorization;
-    if (authHeader.startsWith("Bearer ")) {
-      token = authHeader.substring(7, authHeader.length);
-    }
-  }
-
-  if (!token) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(403).json({ message: "No token provided" });
   }
+
+  const token = authHeader.substring(7, authHeader.length);
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
@@ -91,12 +90,7 @@ app.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      maxAge: 3600000,
-    });
+
 
     res.status(200).json({
       message: "Login successful",
@@ -109,15 +103,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Logout
-app.get("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-  });
-  res.json({ message: "Logged out successfully" });
-});
+
 
 // ---------- TASKS (Protected) ----------
 

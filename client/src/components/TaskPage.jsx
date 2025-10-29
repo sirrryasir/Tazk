@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, LogOut, Trash2 } from "lucide-react";
 
 export default function TaskPage() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const { tasks, loading, error, setError, setLoading, setTasks, addTask } =
     useTaskStore();
@@ -30,14 +30,14 @@ export default function TaskPage() {
     }
     try {
       setLoading(true);
+      const token = localStorage.getItem("token");
       const response = await fetch("/tasks", {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: trimmedTask, user: user.user.email }),
-        credentials: "include",
+        body: JSON.stringify({ title: trimmedTask, user: user.email }),
       });
       if (!response.ok) throw new Error("Failed to add task");
       const data = await response.json();
@@ -54,11 +54,11 @@ export default function TaskPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem("token");
       const response = await fetch("/tasks", {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
       });
 
       if (!response.ok) throw new Error("Failed to fetch tasks");
@@ -75,14 +75,14 @@ export default function TaskPage() {
 
   const toggleComplete = async (id, currentStatus) => {
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ completed: !currentStatus }),
-        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to update task");
 
@@ -95,12 +95,12 @@ export default function TaskPage() {
 
   const deleteTask = async (id) => {
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to delete task");
 
@@ -121,22 +121,6 @@ export default function TaskPage() {
     if (!user) navigate("/auth");
   }, [navigate, user]);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const res = await fetch("https://tazky.onrender.com/me", {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        useAuthStore.setState({ user: { user: data, token: user.token } });
-      } else {
-        logout();
-      }
-    };
-    if (!user) checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
       <Card className="w-full max-w-md shadow-md">
@@ -147,14 +131,6 @@ export default function TaskPage() {
             </CardTitle>
             <CardDescription>Manage your tasks below</CardDescription>
           </div>
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={logout}
-            title="Logout"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
         </CardHeader>
 
         <CardContent className="space-y-4">

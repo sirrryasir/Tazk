@@ -9,20 +9,12 @@ const useAuthStore = create((set) => ({
   setError: (e) => set({ error: e }),
 
   login: (data) => {
-    localStorage.setItem("user", JSON.stringify(data));
-    set({ user: data });
+    localStorage.setItem("token", data.token);
+    set({ user: data.user });
   },
 
-  logout: async () => {
-    try {
-      await fetch("/logout", {
-        method: "GET",
-        credentials: "include",
-      });
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-    localStorage.removeItem("user");
+  logout: () => {
+    localStorage.removeItem("token");
     set({ user: null });
   },
 }));
