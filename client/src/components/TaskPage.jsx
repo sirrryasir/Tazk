@@ -12,15 +12,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, LogOut, Trash2 } from "lucide-react";
+import { Loader2, Trash2, LogOut } from "lucide-react";
 
 export default function TaskPage() {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const { tasks, loading, error, setError, setLoading, setTasks, addTask } =
     useTaskStore();
   const [task, setTask] = useState("");
 
+  // Add new task
   const AddTask = async () => {
     setError(null);
     const trimmedTask = task.trim();
@@ -28,17 +29,19 @@ export default function TaskPage() {
       setError("Task title cannot be empty.");
       return;
     }
+
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("/tasks", {
+      const response = await fetch("/api/tasks", {
         method: "POST",
         headers: {
-          "content-type": "application/json",
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: trimmedTask, user: user.email }),
+        body: JSON.stringify({ title: trimmedTask }),
       });
+
       if (!response.ok) throw new Error("Failed to add task");
       const data = await response.json();
       addTask(data);
@@ -51,16 +54,14 @@ export default function TaskPage() {
     }
   };
 
+  // Fetch user tasks
   const fetchTasks = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("/tasks", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch("/api/tasks", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       if (!response.ok) throw new Error("Failed to fetch tasks");
 
       const data = await response.json();
@@ -73,10 +74,11 @@ export default function TaskPage() {
     }
   };
 
+  // Toggle completion
   const toggleComplete = async (id, currentStatus) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
+      const response = await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -84,6 +86,7 @@ export default function TaskPage() {
         },
         body: JSON.stringify({ completed: !currentStatus }),
       });
+
       if (!response.ok) throw new Error("Failed to update task");
 
       const updated = await response.json();
@@ -93,14 +96,13 @@ export default function TaskPage() {
     }
   };
 
+  // Delete
   const deleteTask = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
+      const response = await fetch(`/api/tasks/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Failed to delete task");
 
@@ -111,9 +113,7 @@ export default function TaskPage() {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchTasks();
-    }
+    if (user) fetchTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -127,10 +127,13 @@ export default function TaskPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-2xl font-bold">
-              Welcome, {user.user.name} !
+              Welcome, {user?.name || "User"}!
             </CardTitle>
             <CardDescription>Manage your tasks below</CardDescription>
           </div>
+          <Button variant="outline" size="icon" onClick={logout}>
+            <LogOut className="h-4 w-4" />
+          </Button>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -151,7 +154,7 @@ export default function TaskPage() {
           {/* Error */}
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          {/* Task List */}
+          {/* Tasks */}
           <div className="border rounded-md p-3 space-y-2 max-h-[300px] overflow-y-auto">
             {loading ? (
               <p className="text-gray-500 text-center">Loading tasks...</p>

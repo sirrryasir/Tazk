@@ -36,16 +36,14 @@ export function AuthForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: signupName, email, password }),
-        credentials: "include",
       });
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Signup failed");
       }
-      const data = await res.json();
-      login(data);
-      await handleLogin();
-      navigate("/tasks");
+
+      await handleLogin(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -54,7 +52,7 @@ export function AuthForm() {
   };
 
   // Login
-  const handleLogin = async () => {
+  const handleLogin = async (afterSignup = false) => {
     setError("");
     if (!email || !password) return setError("Please fill all fields");
 
@@ -64,15 +62,18 @@ export function AuthForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include",
       });
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Login failed");
       }
+
       const data = await res.json();
       login(data);
       navigate("/tasks");
+
+      if (afterSignup) console.log("Auto logged in after signup!");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -109,9 +110,8 @@ export function AuthForm() {
             {/* LOGIN */}
             <TabsContent value="login">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+                <Label>Email</Label>
                 <Input
-                  id="login-email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
@@ -120,9 +120,8 @@ export function AuthForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
+                <Label>Password</Label>
                 <Input
-                  id="login-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
@@ -134,9 +133,8 @@ export function AuthForm() {
             {/* SIGNUP */}
             <TabsContent value="signup">
               <div className="space-y-2">
-                <Label htmlFor="signup-name">Name</Label>
+                <Label>Name</Label>
                 <Input
-                  id="signup-name"
                   placeholder="Your name"
                   value={signupName}
                   onChange={(e) => setSignupName(e.target.value)}
@@ -144,9 +142,8 @@ export function AuthForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label>Email</Label>
                 <Input
-                  id="signup-email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
@@ -155,9 +152,8 @@ export function AuthForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
+                <Label>Password</Label>
                 <Input
-                  id="signup-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
@@ -184,30 +180,6 @@ export function AuthForm() {
               "Create Account"
             )}
           </Button>
-
-          <p className="text-center text-sm text-gray-500">
-            {tab === "login" ? (
-              <>
-                Don’t have an account?
-                <button
-                  onClick={() => setTab("signup")}
-                  className="text-blue-600 hover:underline"
-                >
-                  Create one
-                </button>
-              </>
-            ) : (
-              <>
-                Already have an account?
-                <button
-                  onClick={() => setTab("login")}
-                  className="text-blue-600 hover:underline"
-                >
-                  Login
-                </button>
-              </>
-            )}
-          </p>
         </CardFooter>
       </Card>
     </div>
