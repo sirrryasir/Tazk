@@ -1,3 +1,8 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ardaykaab-frontend-my-app-server.vercel.app/api/:path*"
+    }
+  ]
 }

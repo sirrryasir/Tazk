@@ -30,12 +30,13 @@ export default function TaskPage() {
     }
     try {
       setLoading(true);
-      const response = await fetch("https://tazky.onrender.com/tasks", {
+      const response = await fetch("/tasks", {
         method: "POST",
         headers: {
           "content-type": "application/json",
+          Authorization: `Bearer ${user.token}`,
         },
-        body: JSON.stringify({ title: trimmedTask, user: user.email }),
+        body: JSON.stringify({ title: trimmedTask, user: user.user.email }),
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to add task");
@@ -53,7 +54,10 @@ export default function TaskPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://tazky.onrender.com/tasks", {
+      const response = await fetch("/tasks", {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
         credentials: "include",
       });
 
@@ -75,6 +79,7 @@ export default function TaskPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({ completed: !currentStatus }),
         credentials: "include",
@@ -92,6 +97,9 @@ export default function TaskPage() {
     try {
       const response = await fetch(`https://tazky.onrender.com/tasks/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to delete task");
@@ -133,7 +141,7 @@ export default function TaskPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-2xl font-bold">
-              Welcome, {user.name} !
+              Welcome, {user.user.name} !
             </CardTitle>
             <CardDescription>Manage your tasks below</CardDescription>
           </div>

@@ -11,24 +11,10 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "https://tazky.vercel.app",
+    origin: ["https://tazky.vercel.app", "https://*.vercel.app"],
     credentials: true,
   })
 );
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Origin", "https://tazky.vercel.app");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PATCH, PUT, DELETE, OPTIONS"
-  );
-  next();
-});
 
 app.use(express.json());
 app.use(cookieParser());
@@ -38,12 +24,23 @@ const pool = new Pool({
 });
 
 function verifyToken(req, res, next) {
-  const token = req.cookies.token;
-  if (!token) return res.status(403).json({ message: "No token provided" });
+  let token = req.cookies.token;
+
+  if (!token && req.headers.authorization) {
+    const authHeader = req.headers.authorization;
+    if (authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7, authHeader.length);
+    }
+  }
+
+  if (!token) {
+    return res.status(403).json({ message: "No token provided" });
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err)
+    if (err) {
       return res.status(403).json({ message: "Invalid or expired token" });
+    }
     req.user = user;
     next();
   });

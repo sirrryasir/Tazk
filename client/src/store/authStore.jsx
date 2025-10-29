@@ -9,13 +9,13 @@ const useAuthStore = create((set) => ({
   setError: (e) => set({ error: e }),
 
   login: (data) => {
-    localStorage.setItem("user", JSON.stringify(data.user));
-    set({ user: data.user });
+    localStorage.setItem("user", JSON.stringify(data));
+    set({ user: data });
   },
 
   logout: async () => {
     try {
-      await fetch("https://tazky.onrender.com/logout", {
+      await fetch("/logout", {
         method: "POST",
         credentials: "include",
       });
