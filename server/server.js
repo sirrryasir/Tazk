@@ -9,12 +9,7 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(
-  cors({
-    origin: ["https://tazky.vercel.app", "https://*.vercel.app"],
-    credentials: true,
-  })
-);
+app.use(cors({ origin: "*", credentials: true }));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -114,7 +109,7 @@ app.post("/login", async (req, res) => {
 });
 
 // Logout
-app.post("/logout", (req, res) => {
+app.get("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
@@ -216,6 +211,12 @@ app.get("/test-cookie", verifyToken, (req, res) => {
 // ---------- DEFAULT ----------
 app.get("/", (req, res) => {
   res.send("API is running securely with JWT Authentication!");
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Internal server error" });
 });
 
 // Start server

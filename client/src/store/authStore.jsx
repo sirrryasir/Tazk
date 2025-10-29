@@ -16,7 +16,7 @@ const useAuthStore = create((set) => ({
   logout: async () => {
     try {
       await fetch("/logout", {
-        method: "POST",
+        method: "GET",
         credentials: "include",
       });
     } catch (err) {
