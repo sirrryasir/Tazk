@@ -121,16 +121,31 @@ app.post("/tasks", verifyToken, async (req, res) => {
 
 app.patch("/tasks/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { completed } = req.body;
+  const { completed, title } = req.body;
+
   try {
-    const result = await pool.query(
-      "UPDATE tasks SET completed=$1 WHERE id=$2 RETURNING *",
-      [completed, id]
-    );
+    let query = "";
+    let values = [];
+
+    if (title !== undefined) {
+      // Update title (edit)
+      query = "UPDATE tasks SET title=$1 WHERE id=$2 RETURNING *";
+      values = [title, id];
+    } else if (completed !== undefined) {
+      // Update completion status
+      query = "UPDATE tasks SET completed=$1 WHERE id=$2 RETURNING *";
+      values = [completed, id];
+    } else {
+      return res.status(400).json({ message: "No valid fields provided" });
+    }
+
+    const result = await pool.query(query, values);
     if (!result.rows.length)
       return res.status(404).json({ message: "Task not found" });
+
     res.json(result.rows[0]);
   } catch (e) {
+    console.error("Error updating task:", e);
     res.status(500).json({ message: "Error updating task" });
   }
 });
