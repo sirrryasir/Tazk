@@ -131,7 +131,7 @@ export default function TaskPage() {
             </CardTitle>
             <CardDescription>Manage your tasks below</CardDescription>
           </div>
-          <Button variant="outline" size="icon" onClick={logout}>
+          <Button variant="destructive" size="icon" onClick={logout}>
             <LogOut className="h-4 w-4" />
           </Button>
         </CardHeader>
