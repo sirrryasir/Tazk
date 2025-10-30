@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Trash2, LogOut } from "lucide-react";
+import { Loader2, Trash2, LogOut, Edit3, Save, X } from "lucide-react";
 
 export default function TaskPage() {
   const { user, logout } = useAuthStore();
@@ -20,6 +20,8 @@ export default function TaskPage() {
   const { tasks, loading, error, setError, setLoading, setTasks, addTask } =
     useTaskStore();
   const [task, setTask] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState("");
 
   // Add new task
   const AddTask = async () => {
@@ -88,11 +90,34 @@ export default function TaskPage() {
       });
 
       if (!response.ok) throw new Error("Failed to update task");
-
       const updated = await response.json();
       setTasks(tasks.map((t) => (t.id === id ? updated : t)));
     } catch (err) {
       console.error("Error updating task:", err);
+    }
+  };
+
+  // Edit task title
+  const saveEdit = async (id) => {
+    const trimmed = editValue.trim();
+    if (!trimmed) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: trimmed }),
+      });
+      if (!response.ok) throw new Error("Failed to update task title");
+      const updated = await response.json();
+      setTasks(tasks.map((t) => (t.id === id ? updated : t)));
+      setEditingId(null);
+      setEditValue("");
+    } catch (err) {
+      console.error("Error saving edit:", err);
     }
   };
 
@@ -105,7 +130,6 @@ export default function TaskPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Failed to delete task");
-
       setTasks(tasks.filter((t) => t.id !== id));
     } catch (err) {
       console.error("Error deleting task:", err);
@@ -166,28 +190,73 @@ export default function TaskPage() {
                   key={t.id}
                   className="flex items-center justify-between p-2 rounded hover:bg-gray-100"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 w-full">
                     <Checkbox
                       checked={t.completed}
                       onCheckedChange={() => toggleComplete(t.id, t.completed)}
                     />
-                    <span
-                      className={`text-base ${
-                        t.completed
-                          ? "line-through text-gray-500"
-                          : "text-gray-800"
-                      }`}
-                    >
-                      {t.title}
-                    </span>
+                    {editingId === t.id ? (
+                      <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1"
+                        onKeyDown={(e) =>
+                          e.key === "Enter" ? saveEdit(t.id) : null
+                        }
+                      />
+                    ) : (
+                      <span
+                        className={`flex-1 text-base ${
+                          t.completed
+                            ? "line-through text-gray-500"
+                            : "text-gray-800"
+                        }`}
+                      >
+                        {t.title}
+                      </span>
+                    )}
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => deleteTask(t.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {editingId === t.id ? (
+                    <div className="flex space-x-2 ml-2">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => saveEdit(t.id)}
+                      >
+                        <Save className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditValue("");
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex space-x-2 ml-2">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingId(t.id);
+                          setEditValue(t.title);
+                        }}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => deleteTask(t.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))
             )}
